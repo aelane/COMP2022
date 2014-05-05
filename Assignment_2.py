@@ -31,18 +31,6 @@
 #We may want to make a class of objects that are variables and that are terminals?
 
 
-#Potential Example:
-##Reading input string 'bcc'
-##Input string (remaining) Stack
-##bcc$                   S$
-##bcc$                    BC$ 
-##bcc$                    bBC$ 
-##cc$                     BC$ 
-##cc$                     C$ 
-##cc$                    cC$
-##c$                      C$ 
-##$                       $
- 
 
 #------------------------Modifying the Stack---------------------------------------#
  #We will use lists as our stack
@@ -92,6 +80,37 @@
 #We need to decide on how we want to represent functions
 #I think we should probably just make class objects
 
+
+#Table_Entry Class has 3 member variables
+#variable is the variable read off the stack as a string
+#Terminal is the input symbol read as a string
+#Alpha is a list of of strings composed of Terminals and/or Variables
+class Table_Entry:
+    def __init__(self,var,term,a):
+        self.variable = var
+        self.terminal = term
+        self.alpha = a
+
+    def print_entry(self):
+        print("P[" + self.variable + "," + self.terminal + "] yields " + self.variable + " -> " + ''.join(self.alpha))
+
+#List of Table_Entry Objects
+Table = []
+Table.append(Table_Entry('S','a',['a']))
+Table.append(Table_Entry('S','b',['B','C']))
+Table.append(Table_Entry('S','c',['B','C']))
+Table.append(Table_Entry('S','$',['B','C']))
+Table.append(Table_Entry('B','b',['b','B']))
+Table.append(Table_Entry('B','c',['Epsilon']))
+Table.append(Table_Entry('B','$',['Epsilon']))
+Table.append(Table_Entry('C','c',['c','C']))
+Table.append(Table_Entry('C','$',['Epsilon']))
+
+def print_table(Table):
+    for example in Table:
+        example.print_entry()
+
+print_table(Table)
 
 #--------------------------Parser Psuedo-Code (Slide 28-Week 5)-------------------#
 
