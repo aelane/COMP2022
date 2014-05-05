@@ -1,9 +1,5 @@
 #COMP2022 Assignment 2
 
-#This is Annie
-
-#Hi!
-
 #----------------------------Input Processing Functions----------------------------#
 #This also includes functions necessary to read input .txt files
 
@@ -18,8 +14,52 @@
 #Add $ to end of string to indicate end of string
 
 
+#--------------------------Print derivation and Stack------------------------------#
+#Format the strings properly
+#
+#I think we'll want to represent terminals such as "else" as a single character like 'e' or else a variable e
+#If so, we need make sure it prints out "else" instead
+
+#Also how do we want to represent Terminals vs. Variables (probably lowercase vs. capital)
+
+#We may want to make a class of objects that are variables and that are terminals?
 
 
+#Potential Example:
+##Input string (remaining) Stack
+##bcc$                   S$
+##bcc$                    BC$ 
+##bcc$                    bBC$ 
+##cc$                     BC$ 
+##cc$                     C$ 
+##cc$                    cC$
+##c$                      C$ 
+##$                       $
+ 
+
+
+
+
+#-------------------------Error Message Functions----------------------------------#
+
+#When input is not accepted
+
+#Example: “expected a ‘;’ instead of ‘if’”
+
+
+#--------------------------Example Grammar and Parse Table-------------------------#
+
+##S -> BC | a
+##
+##B -> aA | Epsilon
+##
+##C -> cC | Epsilon
+
+
+##        a         b       c       $
+##S      S->a     S->BC   S->BC   S->BC
+##B               B->bB   B->Epi  B->Epi
+##C                       C->cC   C->Epi
 
 #---------------------------Parse Table Functions----------------------------------#
 
@@ -27,7 +67,7 @@
 
 
 
-#--------------------------Parser Psuedo-Code (Slide 28)---------------------------------#
+#--------------------------Parser Psuedo-Code (Slide 28-Week 5)-------------------#
 
 ##loop
 ##    T = symbol on top of stack
