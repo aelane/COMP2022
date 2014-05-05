@@ -19,6 +19,8 @@
 #However, strings are immutable (so you can't change them once they are created, so that's a bit annoying)
 #Perhaps a list of strings would be best and then we just delete the ones we don't want
 
+#I think we probably do want to just save it as a list...
+
 
 #--------------------------Print derivation and Stack------------------------------#
 #Format the strings properly
@@ -36,6 +38,22 @@
  #We will use lists as our stack
  #We will call it: stack
  #It will be intialized with '$'
+
+
+#Function initializes the stack with '$'
+#Call at the beginning (each time a new string is input to be considered)
+
+def init_stack():
+    stack = []
+    stack.insert(0,'$')
+    stack.insert(0,'S')
+    return stack
+
+def pop_stack(T,stack):
+    stack.remove(T)
+    return stack
+
+
 
  #Whenever we add anything, we will use the function append()
  #For example: stack.append($)
@@ -90,12 +108,13 @@ class Table_Entry:
         self.variable = var
         self.terminal = term
         self.alpha = a
-
+    #Member function prints the entry in desired format
     def print_entry(self):
         print("P[" + self.variable + "," + self.terminal + "] yields " + self.variable + " -> " + ''.join(self.alpha))
 
 #List of Table_Entry Objects
 Table = []
+#Set all entries of the table
 Table.append(Table_Entry('S','a',['a']))
 Table.append(Table_Entry('S','b',['B','C']))
 Table.append(Table_Entry('S','c',['B','C']))
@@ -106,11 +125,18 @@ Table.append(Table_Entry('B','$',['Epsilon']))
 Table.append(Table_Entry('C','c',['c','C']))
 Table.append(Table_Entry('C','$',['Epsilon']))
 
+#Prints all entries in the Table
 def print_table(Table):
     for example in Table:
         example.print_entry()
 
+
 print_table(Table)
+
+#These might not be necessary, but they are here
+#Basically, it helps to define our grammar
+variables = ['S','B','C']
+terminals = ['a','b','c']
 
 #--------------------------Parser Psuedo-Code (Slide 28-Week 5)-------------------#
 
@@ -135,17 +161,116 @@ print_table(Table)
 #       else: error message
 #   print_error(T,I) basically should be able to determine whatever error we have and print a message
 #       May be composed of other error detecting functions
-#   look_in_table(T,I) to find out alpha (and if don't find anything then error message)
+#   look_in_table(T,I,Table) to find out alpha (and if don't find anything then error message)
 #   popT(T, stack) we might not even need both of those arguments
 #   push_alpha(alpha,stack) pushes in reverse order
 
 
+def get_top_stack(stack):
+    return stack[0]
+
+def get_cur_in_sym(in_string):
+    return in_string[0]
+
+def is_accepted(T,I):
+    if T == '$' and I == '$':
+        return True
+    else:
+        return False
+
+def is_terminal(T,terminals):
+    for term in terminals:
+        if T == term:
+            return True
+        else:
+            return False
+
+def is_matching_terminal(T,I):
+    if T == I:
+        return True
+    else:
+        return False
+
+#Removes I from the the in_string
+#"Consumes" it
+def consume_I(I,in_string):
+    in_string.remove(I)
+    return in_string
+
+def print_error(T,I):
+    print("P[" + T + "," + I + "] does not have corresponding rule in Parse Table for this Grammar")
+
+#Iterates through table in search of matching Terminal and Variable Pair
+#Returns entry if match is found
+def look_in_table(T,I,Table):
+    for entry in Table:
+        entry.print_entry()
+        if T == entry.variable and I == entry.terminal:
+            return entry
+    print_error(T,I)
+    return False
+
+def entry_exists(entry):
+    if entry == False:
+        return False
+    else:
+        return True
+
+#See above for pop_stack(stack) function
+
+#According to the entry in parse table, pushes alpha (in reverse) to the stack
+def push_alpha(entry,stack):
+    alpha_reverse = list(entry.alpha)
+    alpha_reverse.reverse()
+    for val in alpha_reverse:
+        stack.insert(0,val)
+    return stack
 
 #--------------------------Function Calls------------------------------------------#
 
 #This is usually where I kind of write the "Main Function"
 #I also tend to do a lot of testing down here
 
+#Initializing the stack
+stack = init_stack()
 
 
+in_string = ['b','c','c']
+count = 0
+
+while len(in_string) >= 0 and count < 5:
+    T = get_top_stack(stack)
+    I = get_cur_in_sym(in_string)
+    print('T: ' + T + " I: " + I)
+    if is_accepted(T,I):
+        print("String is Accepted!")
+    elif is_terminal(T, terminals):
+        print('We found a terminal in the stack!')
+        if is_matching_terminal(T, I):
+            stack = pop_stack(T, stack)
+            in_string = consume_I(I, in_string)
+            print("New stack: " + ''.join(stack) + "Remaining Input: " + ''.join(in_string))
+        else:
+            print_error(T,I)
+    else:
+        entry = look_in_table(T, I, Table)
+        if entry_exists(entry):
+            stack = pop_stack(T, stack)
+            stack = push_alpha(entry,stack)
+        else:
+            print_error(T,I)
+    count = count + 1
+                
+            
+##loop
+##    T = symbol on top of stack
+##    I = current input symbol
+##    if T == I == $ then accept
+##    elif T is a terminal or T = $ then
+##        if T == I then pop T, consume the input I
+##        else error
+##    elif P[T,I] == alpha (means if the entry in table contains the production T -> alpha)
+##        pop T and push the symbols of alpha on the stack in reverse order
+##        else error
+##endloop
 
