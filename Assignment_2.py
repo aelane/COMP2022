@@ -131,7 +131,7 @@ def print_table(Table):
         example.print_entry()
 
 
-print_table(Table)
+#print_table(Table)
 
 #These might not be necessary, but they are here
 #Basically, it helps to define our grammar
@@ -204,8 +204,8 @@ def print_error(T,I):
 #Returns entry if match is found
 def look_in_table(T,I,Table):
     for entry in Table:
-        entry.print_entry()
         if T == entry.variable and I == entry.terminal:
+            entry.print_entry()
             return entry
     print_error(T,I)
     return False
@@ -220,6 +220,8 @@ def entry_exists(entry):
 
 #According to the entry in parse table, pushes alpha (in reverse) to the stack
 def push_alpha(entry,stack):
+    if entry.alpha == ['Epsilon']:
+        return stack
     alpha_reverse = list(entry.alpha)
     alpha_reverse.reverse()
     for val in alpha_reverse:
@@ -235,15 +237,20 @@ def push_alpha(entry,stack):
 stack = init_stack()
 
 
-in_string = ['b','c','c']
+in_string = ['b','c','c','$']
 count = 0
 
-while len(in_string) >= 0 and count < 5:
+while len(in_string) >= 0 and count < 15:
     T = get_top_stack(stack)
     I = get_cur_in_sym(in_string)
+    print("Stack: " + ''.join(stack))
+    print("Input: " + ''.join(in_string))
     print('T: ' + T + " I: " + I)
     if is_accepted(T,I):
         print("String is Accepted!")
+    if T == I:
+        stack = pop_stack(T,stack)
+        in_string = consume_I(I, in_string)
     elif is_terminal(T, terminals):
         print('We found a terminal in the stack!')
         if is_matching_terminal(T, I):
