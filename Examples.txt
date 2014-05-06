@@ -1,0 +1,14 @@
+#Potential Example:
+##Reading input string 'bcc'
+##Input string (remaining) Stack
+##bcc$ 
+                  S$
+##bcc$                    BC$ 
+##bcc$                    bBC$ 
+##cc$                     BC$ 
+##cc$                     C$ 
+##cc$ 
+                   cC$
+##c$                      C$ 
+##$                       $
+ 
