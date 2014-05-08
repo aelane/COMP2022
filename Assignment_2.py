@@ -115,28 +115,89 @@ class Table_Entry:
 #List of Table_Entry Objects
 Table = []
 #Set all entries of the table
-Table.append(Table_Entry('S','a',['a']))
-Table.append(Table_Entry('S','b',['B','C']))
-Table.append(Table_Entry('S','c',['B','C']))
-Table.append(Table_Entry('S','$',['B','C']))
-Table.append(Table_Entry('B','b',['b','B']))
-Table.append(Table_Entry('B','c',['Epsilon']))
-Table.append(Table_Entry('B','$',['Epsilon']))
-Table.append(Table_Entry('C','c',['c','C']))
-Table.append(Table_Entry('C','$',['Epsilon']))
+Table.append(Table_Entry('P','if',['L']))
+Table.append(Table_Entry('P','while',['L']))
+Table.append(Table_Entry('P','id',['L']))
+
+Table.append(Table_Entry('L','if',['I','M']))
+Table.append(Table_Entry('L','while',['I','M']))
+Table.append(Table_Entry('L','id',['I','M']))
+
+Table.append(Table_Entry('M',';',[';','L']))
+Table.append(Table_Entry('M','end',['Epsilon']))
+Table.append(Table_Entry('M','endif',['Epsilon']))
+Table.append(Table_Entry('M','$',['Epsilon']))
+
+Table.append(Table_Entry('I','if',['C']))
+Table.append(Table_Entry('I','while',['W']))
+Table.append(Table_Entry('I','id',['A']))
+
+Table.append(Table_Entry('A','id',['id',':=','E']))
+
+Table.append(Table_Entry('C','if',['if','E','then','L','O','endif']))
+
+Table.append(Table_Entry('O','else',['else','L']))
+Table.append(Table_Entry('O','end',['Epsilon']))
+Table.append(Table_Entry('O','endif',['Epsilon']))
+Table.append(Table_Entry('O','$',['Epsilon']))
+
+Table.append(Table_Entry('W','while',['while','E','do','L','end']))
+ 
+Table.append(Table_Entry('E','c',['E2','R']))
+Table.append(Table_Entry('E','id',['E2','R']))
+
+Table.append(Table_Entry('R',';',['Epsilon']))
+Table.append(Table_Entry('R','<',['Op1','E2','R']))
+Table.append(Table_Entry('R','=',['Op1','E2','R']))
+Table.append(Table_Entry('R','!=',['Op1','E2','R']))
+Table.append(Table_Entry('R','do',['Epsilon']))
+Table.append(Table_Entry('R','endif',['Epsilon']))
+
+Table.append(Table_Entry('E2','c',['T','K']))
+Table.append(Table_Entry('E2','id',['T','K']))
+
+Table.append(Table_Entry('K',';',['Epsilon']))
+Table.append(Table_Entry('K','<',['Epsilon']))
+Table.append(Table_Entry('K','=',['Epsilon']))
+Table.append(Table_Entry('K','!=',['Epsilon']))
+Table.append(Table_Entry('K','+',['Op2','E2']))
+Table.append(Table_Entry('K','-',['Op2','E2']))
+Table.append(Table_Entry('K','do',['Epsilon']))
+Table.append(Table_Entry('K','endif',['Epsilon']))
+
+Table.append(Table_Entry('T','c',['c']))
+Table.append(Table_Entry('T','id',['id']))
+
+Table.append(Table_Entry('Op1','<',['<']))
+Table.append(Table_Entry('Op1','=',['=']))
+Table.append(Table_Entry('Op1','!=',['!=']))
+
+Table.append(Table_Entry('Op2','+',['+']))
+Table.append(Table_Entry('Op2','-',['-']))
+
+#Table.append(Table_Entry('S','a',['a']))
+#Table.append(Table_Entry('S','b',['B','C']))
+#Table.append(Table_Entry('S','c',['B','C']))
+#Table.append(Table_Entry('S','$',['B','C']))
+#Table.append(Table_Entry('B','b',['b','B']))
+#Table.append(Table_Entry('B','c',['Epsilon']))
+#Table.append(Table_Entry('B','$',['Epsilon']))
+#Table.append(Table_Entry('C','c',['c','C']))
+#Table.append(Table_Entry('C','$',['Epsilon']))
 
 #Prints all entries in the Table
 def print_table(Table):
     for example in Table:
         example.print_entry()
 
-
 #print_table(Table)
 
-#These might not be necessary, but they are here
+#These might not be necessary, but they are here (replacing with the original)
 #Basically, it helps to define our grammar
-variables = ['S','B','C']
-terminals = ['a','b','c']
+variables = ['P','L','M','I','A','C','O','W','E','R','E2','K','T','Op1','Op2'] 
+#['S','B','C']
+terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-']
+#['a','b','c']
 
 #--------------------------Parser Psuedo-Code (Slide 28-Week 5)-------------------#
 
