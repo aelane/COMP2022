@@ -45,6 +45,13 @@ def read_input_file(file_name):
     input_string.append('$')
     return input_string
 
+def user_input_filename():
+    file_name = input("Please enter the name of a file to parse: ")
+    if file_name.lower() == "exit":
+        return "exit"
+    input_string = read_input_file(file_name.lower())
+    return input_string
+
 #--------------------------Print derivation and Stack------------------------------#
 #Format the strings properly
 #
@@ -57,6 +64,15 @@ def read_input_file(file_name):
 
 def format_input(in_string):
     return "".join(in_string)
+
+def format_stack(stack):
+    return "".join(stack)
+
+def print_current_state(stack,in_string,original_len):
+    buffer_len = original_len + 10
+    input_string = "".join(in_string)
+    stack_string = "".join(stack)
+    print(input_string.ljust(buffer_len) + stack_string)
 
 
 #------------------------Modifying the Stack---------------------------------------#
@@ -78,24 +94,6 @@ def pop_stack(T,stack):
     stack.remove(T)
     return stack
 
-
-
- #Whenever we add anything, we will use the function append()
- #For example: stack.append($)
-
- #Remember, we will be adding to the stack in reverse order
- #For example, if the production rule says add B C to the stack:
- #  stack.append(C)
- #  stack.append(B)
-
- #To retrieve new item from the top of the stack use pop()
-#pop() removes and returns the last item in the list
-
- #Random thought... Maybe, because of the way these things print...
- #We'd want to instead use insert(index,value) where index is 0
- #And then we're always adding from the front...
- #I'm not sure how this would work with removing values later...
-
 #-------------------------Error Message Functions----------------------------------#
 
 #When input is not accepted
@@ -109,7 +107,9 @@ def error_message(T, I, Table):
         if entry.variable == T:
             if entry.terminal != 'Epsilon' and entry.terminal != '$':
                 expected_terminals.append(entry.terminal)
-    print("Error: Expected a '" + "', '".join(expected_terminals) + "' instead of '" + I + "'")
+    print("Input is REJECTED")
+    print("Error: There is no entry in table for (" + T + ", " + I + "). Expected: '" + "' '".join(expected_terminals) + "'")
+    print("")
 
 
 
@@ -200,7 +200,7 @@ Table.append(Table_Entry('Op2','-',['-']))
 #These might not be necessary, but they are here at least for reference
 #Basically, it helps to define our grammar
 variables = ['P','L','M','I','A','C','O','W','E','R','E2','K','T','Op1','Op2'] 
-terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-']
+terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-','do','end','endif',':=','then']
 
 #--------------------------Functions for Parser While Loop-------------------#
 
@@ -267,18 +267,17 @@ def print_error(T,I):
 def look_in_table(T,I,Table):
     for entry in Table:
         if T == entry.variable and I == entry.terminal:
-            entry.print_entry()
+ #           entry.print_entry()
             return entry
     print_error(T,I)
     return False
 
+#Checks if entry exists
 def entry_exists(entry):
     if entry == False:
         return False
     else:
         return True
-
-#See above for pop_stack(stack) function
 
 #According to the entry in parse table, pushes alpha (in reverse) to the stack
 def push_alpha(entry,stack):
@@ -290,45 +289,54 @@ def push_alpha(entry,stack):
         stack.insert(0,val)
     return stack
 
-#--------------------------Function Calls------------------------------------------#
-
-#This is usually where I kind of write the "Main Function"
-#I also tend to do a lot of testing down here
-
-#Initializing the stack
-stack = init_stack()
-
-
-in_string = read_input_file('accept.txt')
-count = 0
-
-while len(in_string) > 0 and count < 50:
-    T = get_top_stack(stack)
-    I = get_cur_in_sym(in_string)
-    print("Stack: " + ''.join(stack))
-    print("Input: " + ''.join(in_string))
-    print('T: ' + T + " I: " + I)
-    if is_accepted(T,I):
-        print("String is Accepted!")
-    if T == I:
-        stack = pop_stack(T,stack)
-        in_string = consume_I(I, in_string)
-    elif is_terminal(T, terminals):
-        print('We found a terminal in the stack!')
-        if is_matching_terminal(T, I):
-            stack = pop_stack(T, stack)
+#This function parses the input string according to the parse table
+def parse_input(in_string,Table):
+    count = 0
+    stack = init_stack()
+    original_len = len("".join(in_string))
+    print("INPUT STRING REMAINING".ljust(original_len + 10) + "STACK")
+    max_count = 50
+    while len(in_string) > 0 and count < max_count:
+        T = get_top_stack(stack)
+        I = get_cur_in_sym(in_string)
+        print_current_state(stack,in_string, original_len)
+        if is_accepted(T,I):
+            print("String is Accepted!")
+            count = max_count
+        elif T == I:
+            stack = pop_stack(T,stack)
             in_string = consume_I(I, in_string)
-            print("New stack: " + ' '.join(stack) + "Remaining Input: " + ' '.join(in_string))
+        elif is_terminal(T, terminals):
+            print('We found a terminal in the stack!')
+            if is_matching_terminal(T, I):
+                stack = pop_stack(T, stack)
+                in_string = consume_I(I, in_string)
+                print_current_state(stack,in_string, original_len)
+            else:
+                error_message(T,I,Table)
+                count = max_count
         else:
-            error_message(T,I,Table)
-    else:
-        entry = look_in_table(T, I, Table)
-        if entry_exists(entry):
-            stack = pop_stack(T, stack)
-            stack = push_alpha(entry,stack)
-        else:
-            error_message(T,I,Table)
-    count = count + 1
+            entry = look_in_table(T, I, Table)
+            if entry_exists(entry):
+                stack = pop_stack(T, stack)
+                stack = push_alpha(entry,stack)
+            else:
+                error_message(T,I,Table)
+                count = max_count
+        count = count + 1
                 
 
 
+#--------------------------Function Calls------------------------------------------#
+
+while 1 < 2:
+    in_string = user_input_filename()
+
+
+    if in_string == "exit":
+        break
+
+    parse_input(in_string,Table)
+
+
+print("Program terminating")
