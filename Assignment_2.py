@@ -38,7 +38,6 @@ def read_input_file(file_name):
     for token in temp_string:
         token = token.strip()
         token = token.replace('\n','')
-        token = token.replace('id :=','id:=')
         token = token.split(' ')
         input_string = input_string + token
     file_object.close()
@@ -300,22 +299,22 @@ def alternative_terminals(T,Table):
 #Find
 def find_good_token(in_string, expected_terminals):
     count = 0
+    stop = 'no'
+    clean_string = list(in_string)
     for token in in_string:
-        print("Count: " + str(count))
-        count = count + 1
         for possible in expected_terminals:
             if token == possible:
-                print(token + " matches " + possible)
-                return in_string
-        print("Discarding token: " + token)
-        consume_I(token,in_string)
-    return in_string
+                return clean_string               
+        clean_string.remove(token)
+        count = count + 1
+    return clean_string
+
 
 def error_recovery(in_string, T, I, Table):
     print("Warning: See error above. Will attempt to continue by discarding bad input tokens")
     print("")
     expected_terminals = alternative_terminals(T,Table)
-    find_good_token(in_string, expected_terminals)
+    in_string = find_good_token(in_string, expected_terminals)
     return in_string
 
 
@@ -327,14 +326,14 @@ def parse_input(in_string,Table):
     stack = init_stack()
     buffer_len = len("".join(in_string)) + 10
     print_header(buffer_len)
-    max_count = 50
+    max_count = 100
     while len(in_string) > 0 and count < max_count:
         T = get_top_stack(stack)
         I = get_cur_in_sym(in_string)
         print_current_state(stack,in_string, buffer_len)
         if is_accepted(T,I):
             print("Input String is ACCEPTED")
-            count = max_count
+            break
         elif T == I:
             stack = pop_stack(T,stack)
             in_string = consume_I(I, in_string)
@@ -355,6 +354,8 @@ def parse_input(in_string,Table):
                 error_message(T,I,Table)
                 in_string = error_recovery(in_string, T, I, Table)
                 print_header(buffer_len)
+        if len(in_string) == 0:
+            print("String could not be accepted. It was rejected.")
         count = count + 1
                 
 #---------------------------------Program------------------------------------------#
