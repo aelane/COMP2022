@@ -45,6 +45,7 @@ def read_input_file(file_name):
     input_string.append('$')
     return input_string
 
+#Requests a filename from user
 def user_input_filename():
     file_name = input("Please enter the name of a file to parse: ")
     if file_name.lower() == "exit":
@@ -68,11 +69,14 @@ def format_input(in_string):
 def format_stack(stack):
     return "".join(stack)
 
-def print_current_state(stack,in_string,original_len):
-    buffer_len = original_len + 10
+def print_current_state(stack,in_string,buffer_len):
+
     input_string = "".join(in_string)
     stack_string = "".join(stack)
     print(input_string.ljust(buffer_len) + stack_string)
+
+def print_header(buffer_len):
+    print("INPUT STRING REMAINING".ljust(buffer_len) + "STACK")
 
 
 #------------------------Modifying the Stack---------------------------------------#
@@ -93,24 +97,6 @@ def init_stack():
 def pop_stack(T,stack):
     stack.remove(T)
     return stack
-
-#-------------------------Error Message Functions----------------------------------#
-
-#When input is not accepted
-#I think this occurs whenever the parse table doesn't have a recommendation?
-
-#Example: “expected a ‘;’ instead of ‘if’”
-
-def error_message(T, I, Table):
-    expected_terminals = []
-    for entry in Table:
-        if entry.variable == T:
-            if entry.terminal != 'Epsilon' and entry.terminal != '$':
-                expected_terminals.append(entry.terminal)
-    print("Input is REJECTED")
-    print("Error: There is no entry in table for (" + T + ", " + I + "). Expected: '" + "' '".join(expected_terminals) + "'")
-    print("")
-
 
 
 #---------------------------Parse Table Functions----------------------------------#
@@ -202,7 +188,7 @@ Table.append(Table_Entry('Op2','-',['-']))
 variables = ['P','L','M','I','A','C','O','W','E','R','E2','K','T','Op1','Op2'] 
 terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-','do','end','endif',':=','then']
 
-#--------------------------Functions for Parser While Loop-------------------#
+#--------------------------Functions for Parser ------------------------------------------#
 
 #Functions inspired by psuedocode:
 #   get_top_stack(stack) Extract top symbol from stack 
@@ -289,32 +275,77 @@ def push_alpha(entry,stack):
         stack.insert(0,val)
     return stack
 
+#-------------------------Error Message Functions----------------------------------#
+
+#When input is not accepted
+#I think this occurs whenever the parse table doesn't have a recommendation?
+
+#Example: “expected a ‘;’ instead of ‘if’”
+
+def error_message(T, I, Table):
+    expected_terminals = alternative_terminals(T,Table)
+    print("Input is REJECTED")
+    print("Error: There is no entry in table for (" + T + ", " + I + "). Expected: '" + "' '".join(expected_terminals) + "'")
+    print("")
+
+#Creates a list from Parse Table of acceptable terminals from input
+def alternative_terminals(T,Table):
+    expected_terminals = []
+    for entry in Table:
+        if entry.variable == T:
+            if entry.terminal != 'Epsilon' and entry.terminal != '$':
+                expected_terminals.append(entry.terminal)
+    return expected_terminals
+
+#Find
+def find_good_token(in_string, expected_terminals):
+    count = 0
+    for token in in_string:
+        print("Count: " + str(count))
+        count = count + 1
+        for possible in expected_terminals:
+            if token == possible:
+                print(token + " matches " + possible)
+                return in_string
+        print("Discarding token: " + token)
+        consume_I(token,in_string)
+    return in_string
+
+def error_recovery(in_string, T, I, Table):
+    print("Warning: See error above. Will attempt to continue by discarding bad input tokens")
+    print("")
+    expected_terminals = alternative_terminals(T,Table)
+    find_good_token(in_string, expected_terminals)
+    return in_string
+
+
+#----------------------------------Parser Function----------------------------------#
+
 #This function parses the input string according to the parse table
 def parse_input(in_string,Table):
     count = 0
     stack = init_stack()
-    original_len = len("".join(in_string))
-    print("INPUT STRING REMAINING".ljust(original_len + 10) + "STACK")
+    buffer_len = len("".join(in_string)) + 10
+    print_header(buffer_len)
     max_count = 50
     while len(in_string) > 0 and count < max_count:
         T = get_top_stack(stack)
         I = get_cur_in_sym(in_string)
-        print_current_state(stack,in_string, original_len)
+        print_current_state(stack,in_string, buffer_len)
         if is_accepted(T,I):
-            print("String is Accepted!")
+            print("Input String is ACCEPTED")
             count = max_count
         elif T == I:
             stack = pop_stack(T,stack)
             in_string = consume_I(I, in_string)
         elif is_terminal(T, terminals):
-            print('We found a terminal in the stack!')
             if is_matching_terminal(T, I):
                 stack = pop_stack(T, stack)
                 in_string = consume_I(I, in_string)
-                print_current_state(stack,in_string, original_len)
             else:
                 error_message(T,I,Table)
-                count = max_count
+                in_string = error_recovery(in_string, T, I, Table)
+                print_header(buffer_len)
         else:
             entry = look_in_table(T, I, Table)
             if entry_exists(entry):
@@ -322,21 +353,18 @@ def parse_input(in_string,Table):
                 stack = push_alpha(entry,stack)
             else:
                 error_message(T,I,Table)
-                count = max_count
+                in_string = error_recovery(in_string, T, I, Table)
+                print_header(buffer_len)
         count = count + 1
                 
-
-
-#--------------------------Function Calls------------------------------------------#
-
+#---------------------------------Program------------------------------------------#
+#Run program until "exit" is entered by the user to break the loop
 while 1 < 2:
     in_string = user_input_filename()
-
 
     if in_string == "exit":
         break
 
     parse_input(in_string,Table)
-
 
 print("Program terminating")
