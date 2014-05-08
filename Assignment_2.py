@@ -30,7 +30,7 @@
 #split along spaces to create separate tokens
 #concatenate list in tokens with the input_string
 #add '$' to the end of the list to indicate end of input string
-def read_input(file_name):
+def read_input_file(file_name):
     file_object = open(file_name, 'r')
     input_string = []
     temp_string = []
@@ -45,9 +45,6 @@ def read_input(file_name):
     input_string.append('$')
     return input_string
 
-output_string = read_input('accept.txt')
-print(output_string)
-
 #--------------------------Print derivation and Stack------------------------------#
 #Format the strings properly
 #
@@ -61,7 +58,6 @@ print(output_string)
 def format_input(in_string):
     return "".join(in_string)
 
-print(format_input(output_string))
 
 #------------------------Modifying the Stack---------------------------------------#
  #We will use lists as our stack
@@ -75,7 +71,7 @@ print(format_input(output_string))
 def init_stack():
     stack = []
     stack.insert(0,'$')
-    stack.insert(0,'S')
+    stack.insert(0,'P')
     return stack
 
 def pop_stack(T,stack):
@@ -119,10 +115,6 @@ def error_message(T, I, Table):
 
 #---------------------------Parse Table Functions----------------------------------#
 
-#We need to decide on how we want to represent functions
-#I think we should probably just make class objects
-
-
 #Table_Entry Class has 3 member variables
 #variable is the variable read off the stack as a string
 #Terminal is the input symbol read as a string
@@ -135,6 +127,12 @@ class Table_Entry:
     #Member function prints the entry in desired format
     def print_entry(self):
         print("P[" + self.variable + "," + self.terminal + "] yields " + self.variable + " -> " + ''.join(self.alpha))
+
+#Prints all entries in the Table
+def print_table(Table):
+    for example in Table:
+        example.print_entry()
+
 
 #List of Table_Entry Objects
 Table = []
@@ -199,31 +197,10 @@ Table.append(Table_Entry('Op1','!=',['!=']))
 Table.append(Table_Entry('Op2','+',['+']))
 Table.append(Table_Entry('Op2','-',['-']))
 
-#Table.append(Table_Entry('S','a',['a']))
-#Table.append(Table_Entry('S','b',['B','C']))
-#Table.append(Table_Entry('S','c',['B','C']))
-#Table.append(Table_Entry('S','$',['B','C']))
-#Table.append(Table_Entry('B','b',['b','B']))
-#Table.append(Table_Entry('B','c',['Epsilon']))
-#Table.append(Table_Entry('B','$',['Epsilon']))
-#Table.append(Table_Entry('C','c',['c','C']))
-#Table.append(Table_Entry('C','$',['Epsilon']))
-
-#Prints all entries in the Table
-def print_table(Table):
-    for example in Table:
-        example.print_entry()
-
-#print_table(Table)
-
-
 #These might not be necessary, but they are here at least for reference
-
 #Basically, it helps to define our grammar
 variables = ['P','L','M','I','A','C','O','W','E','R','E2','K','T','Op1','Op2'] 
-#['S','B','C']
 terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-']
-#['a','b','c']
 
 #--------------------------Functions for Parser While Loop-------------------#
 
@@ -322,13 +299,10 @@ def push_alpha(entry,stack):
 stack = init_stack()
 
 
-in_string = ['b','c','a','$']
+in_string = read_input_file('accept.txt')
 count = 0
 
-error_message('S','z',Table)
-
-
-while len(in_string) > 0 and count < 15:
+while len(in_string) > 0 and count < 50:
     T = get_top_stack(stack)
     I = get_cur_in_sym(in_string)
     print("Stack: " + ''.join(stack))
@@ -344,7 +318,7 @@ while len(in_string) > 0 and count < 15:
         if is_matching_terminal(T, I):
             stack = pop_stack(T, stack)
             in_string = consume_I(I, in_string)
-            print("New stack: " + ''.join(stack) + "Remaining Input: " + ''.join(in_string))
+            print("New stack: " + ' '.join(stack) + "Remaining Input: " + ' '.join(in_string))
         else:
             error_message(T,I,Table)
     else:
