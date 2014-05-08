@@ -1,26 +1,52 @@
 #COMP2022 Assignment 2
+#----------------------------Introduction------------------------------------------#
+#Written by Annie Lane and Michaela Kerem
+#For Assignment 2 for COMP2022: Formal Languages and Logic
+#Semester 1, 2014
 
-#----------------------------Input Processing Functions----------------------------#
+#LL(1) Parser for Grammar G'
+#Reads input from a .txt file
+#Prints line showing remaining input and stack for each step
+#Determines if input is accepted or rejected
+#Provides error messages when incorrect token found
+#Includes error recovery feature
+
+#This program is organized into the following sections
+#   Input Processing
+#   Derivation and Stack Printing
+#   Modifying the Stack
+#   Error Messages
+#   Parse Table Class and Function
+#   Parser While Loop Functions
+#   Function Calls
+
+#----------------------------Input Processing-------------------------------------#
 #This also includes functions necessary to read input .txt files
 
-#Read file
-#file_object = open(filename, mode) where file_object is the variable to put the file object.
-#mode is just 'r' since we are just reading
-#file_object.close() in order to close the file
+#Read .txt file by name of file
+#remove leading and following white space
+#remove newline characters
+#concatenate 'id :=' into 'id:=' so there is no space
+#split along spaces to create separate tokens
+#concatenate list in tokens with the input_string
+#add '$' to the end of the list to indicate end of input string
+def read_input(file_name):
+    file_object = open(file_name, 'r')
+    input_string = []
+    temp_string = []
+    temp_string = file_object.readlines()
+    for token in temp_string:
+        token = token.strip()
+        token = token.replace('\n','')
+        token = token.replace('id :=','id:=')
+        token = token.split(' ')
+        input_string = input_string + token
+    file_object.close()
+    input_string.append('$')
+    return input_string
 
-#Remove spaces and line breaks (CRs)
-#supposedly that's just string.strip() but we can look that up
-
-#Add $ to end of string to indicate end of string
-
-#We need to decide how we'd like to store our input
-#It could just be a string
-#the input will only have terminals, no variables, so that's practical
-#However, strings are immutable (so you can't change them once they are created, so that's a bit annoying)
-#Perhaps a list of strings would be best and then we just delete the ones we don't want
-
-#I think we probably do want to just save it as a list...
-
+output_string = read_input('accept.txt')
+print(output_string)
 
 #--------------------------Print derivation and Stack------------------------------#
 #Format the strings properly
@@ -32,7 +58,10 @@
 
 #We may want to make a class of objects that are variables and that are terminals?
 
+def format_input(in_string):
+    return "".join(in_string)
 
+print(format_input(output_string))
 
 #------------------------Modifying the Stack---------------------------------------#
  #We will use lists as our stack
@@ -78,20 +107,15 @@ def pop_stack(T,stack):
 
 #Example: “expected a ‘;’ instead of ‘if’”
 
+def error_message(T, I, Table):
+    expected_terminals = []
+    for entry in Table:
+        if entry.variable == T:
+            if entry.terminal != 'Epsilon' and entry.terminal != '$':
+                expected_terminals.append(entry.terminal)
+    print("Error: Expected a '" + "', '".join(expected_terminals) + "' instead of '" + I + "'")
 
-#--------------------------Example Grammar and Parse Table-------------------------#
 
-##S -> BC | a
-##
-##B -> aA | Epsilon
-##
-##C -> cC | Epsilon
-
-
-##        a         b       c       $
-##S      S->a     S->BC   S->BC   S->BC
-##B               B->bB   B->Epi  B->Epi
-##C                       C->cC   C->Epi
 
 #---------------------------Parse Table Functions----------------------------------#
 
@@ -133,24 +157,12 @@ def print_table(Table):
 
 #print_table(Table)
 
-#These might not be necessary, but they are here
+#These might not be necessary, but they are here at least for reference
 #Basically, it helps to define our grammar
 variables = ['S','B','C']
 terminals = ['a','b','c']
 
-#--------------------------Parser Psuedo-Code (Slide 28-Week 5)-------------------#
-
-##loop
-##    T = symbol on top of stack
-##    I = current input symbol
-##    if T == I == $ then accept
-##    elif T is a terminal or T = $ then
-##        if T == I then pop T, consume the input I
-##        else error
-##    elif P[T,I] == alpha (means if the entry in table contains the production T -> alpha)
-##        pop T and push the symbols of alpha on the stack in reverse order
-##        else error
-##endloop
+#--------------------------Functions for Parser While Loop-------------------#
 
 #Functions inspired by psuedocode:
 #   get_top_stack(stack) Extract top symbol from stack 
@@ -165,25 +177,29 @@ terminals = ['a','b','c']
 #   popT(T, stack) we might not even need both of those arguments
 #   push_alpha(alpha,stack) pushes in reverse order
 
-
+#Extract top symbol from stack
 def get_top_stack(stack):
     if stack != []:
         return stack[0]
     else:
         return False
 
+#Extract the current input symbol from input string
 def get_cur_in_sym(in_string):
     if in_string != []:
         return in_string[0]
     else:
         return False
 
+#True when T and I match to '$' (so the input is accepted)
 def is_accepted(T,I):
     if T == '$' and I == '$':
         return True
     else:
         return False
 
+#compares top of stack to list of terminals to see if it is a terminal
+#Otherwise, produces an error message
 def is_terminal(T,terminals):
     for term in terminals:
         if T == term:
@@ -243,8 +259,11 @@ def push_alpha(entry,stack):
 stack = init_stack()
 
 
-in_string = ['b','c','c','$']
+in_string = ['b','c','a','$']
 count = 0
+
+error_message('S','z',Table)
+
 
 while len(in_string) > 0 and count < 15:
     T = get_top_stack(stack)
@@ -264,26 +283,15 @@ while len(in_string) > 0 and count < 15:
             in_string = consume_I(I, in_string)
             print("New stack: " + ''.join(stack) + "Remaining Input: " + ''.join(in_string))
         else:
-            print_error(T,I)
+            error_message(T,I,Table)
     else:
         entry = look_in_table(T, I, Table)
         if entry_exists(entry):
             stack = pop_stack(T, stack)
             stack = push_alpha(entry,stack)
         else:
-            print_error(T,I)
+            error_message(T,I,Table)
     count = count + 1
                 
-            
-##loop
-##    T = symbol on top of stack
-##    I = current input symbol
-##    if T == I == $ then accept
-##    elif T is a terminal or T = $ then
-##        if T == I then pop T, consume the input I
-##        else error
-##    elif P[T,I] == alpha (means if the entry in table contains the production T -> alpha)
-##        pop T and push the symbols of alpha on the stack in reverse order
-##        else error
-##endloop
+
 
