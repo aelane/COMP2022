@@ -15,11 +15,10 @@
 #   Input Processing
 #   Derivation and Stack Printing
 #   Modifying the Stack
-#   Parse Table Functions
-#   Error Message Function
-#   Parser Function
-#   Intialize Parse Table
-#   Program
+#   Error Messages
+#   Parse Table Class and Function
+#   Parser While Loop Functions
+#   Function Calls
 
 #----------------------------Input Processing-------------------------------------#
 #This also includes functions necessary to read input .txt files
@@ -53,7 +52,7 @@ def user_input_filename():
     input_string = read_input_file(file_name.lower())
     return input_string
 
-#--------------------------Derivation and Stack Printing------------------------------#
+#--------------------------Print derivation and Stack------------------------------#
 #Format the strings properly
 
 #Print current state of stack and input string remaining
@@ -105,6 +104,77 @@ class Table_Entry:
 def print_table(Table):
     for example in Table:
         example.print_entry()
+
+
+#List of Table_Entry Objects
+Table = []
+#Set all entries of the table
+Table.append(Table_Entry('P','if',['L']))
+Table.append(Table_Entry('P','while',['L']))
+Table.append(Table_Entry('P','id',['L']))
+
+Table.append(Table_Entry('L','if',['I','M']))
+Table.append(Table_Entry('L','while',['I','M']))
+Table.append(Table_Entry('L','id',['I','M']))
+
+Table.append(Table_Entry('M',';',[';','L']))
+Table.append(Table_Entry('M','end',['Epsilon']))
+Table.append(Table_Entry('M','endif',['Epsilon']))
+Table.append(Table_Entry('M','$',['Epsilon']))
+
+Table.append(Table_Entry('I','if',['C']))
+Table.append(Table_Entry('I','while',['W']))
+Table.append(Table_Entry('I','id',['A']))
+
+Table.append(Table_Entry('A','id',['id',':=','E']))
+
+Table.append(Table_Entry('C','if',['if','E','then','L','O','endif']))
+
+Table.append(Table_Entry('O','else',['else','L']))
+Table.append(Table_Entry('O','end',['Epsilon']))
+Table.append(Table_Entry('O','endif',['Epsilon']))
+Table.append(Table_Entry('O','$',['Epsilon']))
+
+Table.append(Table_Entry('W','while',['while','E','do','L','end']))
+ 
+Table.append(Table_Entry('E','c',['E2','R']))
+Table.append(Table_Entry('E','id',['E2','R']))
+
+Table.append(Table_Entry('R',';',['Epsilon']))
+Table.append(Table_Entry('R','<',['Op1','E2','R']))
+Table.append(Table_Entry('R','=',['Op1','E2','R']))
+Table.append(Table_Entry('R','!=',['Op1','E2','R']))
+Table.append(Table_Entry('R','do',['Epsilon']))
+Table.append(Table_Entry('R','endif',['Epsilon']))
+
+Table.append(Table_Entry('E2','c',['T','K']))
+Table.append(Table_Entry('E2','id',['T','K']))
+
+Table.append(Table_Entry('K',';',['Epsilon']))
+Table.append(Table_Entry('K','<',['Epsilon']))
+Table.append(Table_Entry('K','=',['Epsilon']))
+Table.append(Table_Entry('K','!=',['Epsilon']))
+Table.append(Table_Entry('K','+',['Op2','E2']))
+Table.append(Table_Entry('K','-',['Op2','E2']))
+Table.append(Table_Entry('K','do',['Epsilon']))
+Table.append(Table_Entry('K','endif',['Epsilon']))
+#Testing something!
+Table.append(Table_Entry('K','then',['Epsilon']))
+
+Table.append(Table_Entry('T','c',['c']))
+Table.append(Table_Entry('T','id',['id']))
+
+Table.append(Table_Entry('Op1','<',['<']))
+Table.append(Table_Entry('Op1','=',['=']))
+Table.append(Table_Entry('Op1','!=',['!=']))
+
+Table.append(Table_Entry('Op2','+',['+']))
+Table.append(Table_Entry('Op2','-',['-']))
+
+#These might not be necessary, but they are here at least for reference
+#Basically, it helps to define our grammar
+variables = ['P','L','M','I','A','C','O','W','E','R','E2','K','T','Op1','Op2'] 
+terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-','do','end','endif',':=','then']
 
 #--------------------------Functions for Parser ------------------------------------------#
 
@@ -159,9 +229,9 @@ def print_error(T,I):
 def look_in_table(T,I,Table):
     for entry in Table:
         if T == entry.variable and I == entry.terminal:
-            #sentry.print_entry()
+ #           entry.print_entry()
             return entry
-    #print_error(T,I)
+    print_error(T,I)
     return False
 
 #Checks if entry exists
@@ -189,7 +259,6 @@ def push_alpha(entry,stack):
 #Prints appropriate error message based on top of stack and current input token value
 def error_message(T, I, Table):
     expected_terminals = alternative_terminals(T,Table)
-    print("")
     print("Input is REJECTED")
     print("Error: There is no entry in table for (" + T + ", " + I + "). Expected: '" + "' '".join(expected_terminals) + "'")
     print("")
@@ -217,23 +286,17 @@ def find_good_token(in_string, expected_terminals):
     return clean_string
 
 #Combines find_good_token and alternative_terminals into one neat function
-def error_recovery(in_string, T, I, Table, buffer_len):
+def error_recovery(in_string, T, I, Table):
     print("Warning: See error above. Will attempt to continue by discarding bad input tokens")
     print("")
     expected_terminals = alternative_terminals(T,Table)
     in_string = find_good_token(in_string, expected_terminals)
-    if len(in_string) > 0:
-        print_header(buffer_len)
-    else:
-        print("Could not recover from error")
-        print("")
     return in_string
 
 
 #----------------------------------Parser Function----------------------------------#
 
 #This function parses the input string according to the parse table
-#Implements psuedocode seen in lecture slides
 def parse_input(in_string,Table):
     count = 0
     stack = init_stack()
@@ -257,7 +320,8 @@ def parse_input(in_string,Table):
                 in_string = consume_I(I, in_string)
             else:
                 error_message(T,I,Table)
-                in_string = error_recovery(in_string, T, I, Table,buffer_len)
+                in_string = error_recovery(in_string, T, I, Table)
+                print_header(buffer_len)
         else:
             entry = look_in_table(T, I, Table)
             if entry_exists(entry):
@@ -265,94 +329,11 @@ def parse_input(in_string,Table):
                 stack = push_alpha(entry,stack)
             else:
                 error_message(T,I,Table)
-                in_string = error_recovery(in_string, T, I, Table, buffer_len)
+                in_string = error_recovery(in_string, T, I, Table)
+                print_header(buffer_len)
+        if len(in_string) == 0:
+            print("String could not be accepted. It was rejected.")
         count = count + 1
-
-#-------------------------Intialize Parse Table------------------------------------#
-
-#List of Table_Entry Objects
-Table = []
-
-#Set all entries of the table
-Table.append(Table_Entry('P','if',['L']))
-Table.append(Table_Entry('P','while',['L']))
-Table.append(Table_Entry('P','id',['L']))
-
-Table.append(Table_Entry('L','if',['I','M']))
-Table.append(Table_Entry('L','while',['I','M']))
-Table.append(Table_Entry('L','id',['I','M']))
-
-Table.append(Table_Entry('M',';',[';','L']))
-Table.append(Table_Entry('M','else',['Epsilon']))
-Table.append(Table_Entry('M','end',['Epsilon']))
-Table.append(Table_Entry('M','endif',['Epsilon']))
-Table.append(Table_Entry('M','$',['Epsilon']))
-
-Table.append(Table_Entry('I','if',['C']))
-Table.append(Table_Entry('I','while',['W']))
-Table.append(Table_Entry('I','id',['A']))
-
-Table.append(Table_Entry('A','id',['id',':=','E']))
-
-Table.append(Table_Entry('C','if',['if','E','then','L','O','endif']))
-
-Table.append(Table_Entry('O','else',['else','L']))
-Table.append(Table_Entry('O','endif',['Epsilon']))
-
-Table.append(Table_Entry('W','while',['while','E','do','L','end']))
- 
-Table.append(Table_Entry('E','c',['E2','R']))
-Table.append(Table_Entry('E','id',['E2','R']))
-
-Table.append(Table_Entry('R',';',['Epsilon']))
-Table.append(Table_Entry('R','<',['Op1','E2','R']))
-Table.append(Table_Entry('R','=',['Op1','E2','R']))
-Table.append(Table_Entry('R','!=',['Op1','E2','R']))
-Table.append(Table_Entry('R','do',['Epsilon']))
-Table.append(Table_Entry('R','endif',['Epsilon']))
-Table.append(Table_Entry('R','then',['Epsilon']))
-Table.append(Table_Entry('R','$',['Epsilon']))
-Table.append(Table_Entry('R','then',['Epsilon']))
-Table.append(Table_Entry('R','else',['Epsilon']))
-Table.append(Table_Entry('R','-',['Epsilon']))
-Table.append(Table_Entry('R','+',['Epsilon']))
-Table.append(Table_Entry('R','c',['Epsilon']))
-Table.append(Table_Entry('R','id',['Epsilon']))
-Table.append(Table_Entry('R','end',['Epsilon']))
-
-Table.append(Table_Entry('E2','c',['T','K']))
-Table.append(Table_Entry('E2','id',['T','K']))
-
-Table.append(Table_Entry('K',';',['Epsilon']))
-Table.append(Table_Entry('K','<',['Epsilon']))
-Table.append(Table_Entry('K','=',['Epsilon']))
-Table.append(Table_Entry('K','!=',['Epsilon']))
-Table.append(Table_Entry('K','+',['Op2','E2']))
-Table.append(Table_Entry('K','-',['Op2','E2']))
-Table.append(Table_Entry('K','do',['Epsilon']))
-Table.append(Table_Entry('K','endif',['Epsilon']))
-Table.append(Table_Entry('K','then',['Epsilon']))
-Table.append(Table_Entry('K','else',['Epsilon']))
-Table.append(Table_Entry('K','c',['Epsilon']))
-Table.append(Table_Entry('K','id',['Epsilon']))
-Table.append(Table_Entry('K','$',['Epsilon']))
-Table.append(Table_Entry('K','end',['Epsilon']))
-
-Table.append(Table_Entry('T','c',['c']))
-Table.append(Table_Entry('T','id',['id']))
-
-Table.append(Table_Entry('Op1','<',['<']))
-Table.append(Table_Entry('Op1','=',['=']))
-Table.append(Table_Entry('Op1','!=',['!=']))
-
-Table.append(Table_Entry('Op2','+',['+']))
-Table.append(Table_Entry('Op2','-',['-']))
-
-
-#These might not be necessary, but they are here at least for reference
-#Basically, it helps to define our grammar
-variables = ['P','L','M','I','A','C','O','W','E','R','E2','K','T','Op1','Op2'] 
-terminals = ['id', 'if', 'while', ';', 'else', 'c', '<', '=', '!=', '+', '-','do','end','endif',':=','then']
                 
 #---------------------------------Program------------------------------------------#
 #Run program until "exit" is entered by the user to break the loop

@@ -15,7 +15,7 @@ To exit, enter 'exit' as input
 Sample Files:
 accept.txt
 error_missing_semicolon.txt
-
+accept_other_terminals.txt
 
 If you would like to run “LL_1_Parser.py” with .txt not listed above:
 Add the new .txt to the directory where LL_1_Parser.py is (initially Joe_Lane_Kerem)
