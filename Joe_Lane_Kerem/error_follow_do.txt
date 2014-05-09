@@ -1,0 +1,4 @@
+if c + c = id then 
+	while 
+	do 
+end

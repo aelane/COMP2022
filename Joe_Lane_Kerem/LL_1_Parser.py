@@ -1,4 +1,4 @@
-#COMP2022 Assignment 2
+
 #----------------------------Introduction------------------------------------------#
 #Written by Annie Lane and Michaela Kerem
 #For Assignment 2 for COMP2022: Formal Languages and Logic
